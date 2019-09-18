@@ -760,13 +760,16 @@ class L2M2019Env(OsimEnv):
         self.d_reward['effort'] += ACT2*dt
         self.d_reward['footstep']['effort'] += ACT2*dt
 
-        self.d_reward['footstep']['del_t'] += dt
 
         # reward from velocity (penalize from deviating from v_tgt)
 
         p_body = [state_desc['body_pos']['pelvis'][0], -state_desc['body_pos']['pelvis'][2]]
         v_body = [state_desc['body_vel']['pelvis'][0], -state_desc['body_vel']['pelvis'][2]]
         v_tgt = self.vtgt.get_vtgt(p_body).T
+
+        # v_projected = (np.dot(v_tgt, v_body) / (np.linalg.norm(v_tgt) * np.linalg.norm(v_body))) * v_body
+        # print(v_body, v_projected)
+        self.d_reward['footstep']['del_t'] += (v_body[0]) * dt
 
         self.d_reward['footstep']['del_v'] += (v_body - v_tgt)*dt
 
@@ -788,6 +791,7 @@ class L2M2019Env(OsimEnv):
             self.d_reward['footstep']['del_t'] = 0
             self.d_reward['footstep']['del_v'] = 0
             self.d_reward['footstep']['effort'] = 0
+            print(reward_footstep_0, reward_footstep_v, reward_footstep_e)
 
             reward += reward_footstep_0 + reward_footstep_v + reward_footstep_e
 

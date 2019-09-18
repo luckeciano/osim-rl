@@ -14,12 +14,13 @@ parser.add_argument('--std', type=float, required=True)
 
 args = parser.parse_args()
 
-trial_name = 'trial_190505_L2M2019CtrlEnv_d0_' + str(args.difficulty) + '_' + str(args.std)
+trial_name = 'trial_opt_from_2d' + str(args.difficulty) + '_' + str(args.std)
 
-params = np.ones(45)
-params = np.loadtxt('../osim/control/params_3D_init.txt')
+params_2d = np.loadtxt('../osim/control/params_2D.txt')
+params_opt = np.ones(9)
+
 #params = np.loadtxt('./optim_data/cma/trial_181029_walk_3D_noStand_8_best.txt')
-N_POP = 16 # 8 = 4 + floor(3*log(45))
+N_POP = 12 # 8 = 4 + floor(3*log(9))
 N_PROC = 5
 TIMEOUT = 10*60
       
@@ -58,7 +59,8 @@ def f_ind(n_gen, i_worker, params):
     for i in range(timstep_limit+100):
         t += sim_dt
 
-        locoCtrl.set_control_params(params)
+        final_params = np.concatenate([params_2d, params])
+        locoCtrl.set_control_params(final_params)
         action = locoCtrl.update(obs_dict)
         obs_dict, reward, done, info = env.step(action, project=True, obs_as_dict=True)
         total_reward += reward
@@ -88,7 +90,7 @@ class CMATrainPar(object):
             except Exception as e_msg:
                 error_count += 1
                 print('\ntimeout error (x{})!!!'.format(error_count))
-                #print(e_msg)
+                print(e_msg)
 
         mean_reward = np.mean(v_total_reward)
 
@@ -118,7 +120,7 @@ if __name__ == '__main__':
     solver.options.set("verb_filenameprefix", 'optim_data/cma/' + trial_name)
     solver.set_verbose(True)
 
-    x0 = params
+    x0 = params_opt
     sigma = args.std
 
     res = solver.solve(x0, sigma)

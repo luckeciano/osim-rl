@@ -2,9 +2,9 @@ from osim.env import L2M2019Env
 from osim.control.osim_loco_reflex_song2019 import OsimReflexCtrl
 import numpy as np
 
-mode = '2D'
+mode = '3D'
 difficulty = 2
-visualize=True
+visualize=False
 seed=None
 sim_dt = 0.01
 sim_t = 10
@@ -28,12 +28,13 @@ INIT_POSE = np.array([
 if mode is '2D':
     params = np.loadtxt('./osim/control/params_2D.txt')
 elif mode is '3D':
-    params = np.loadtxt('./osim/control/params_3D_init.txt')
+    params = np.loadtxt('./osim/control/params_3D.txt')
+
 
 locoCtrl = OsimReflexCtrl(mode=mode, dt=sim_dt)
 env = L2M2019Env(visualize=visualize, seed=seed, difficulty=difficulty)
 env.change_model(model=mode, difficulty=difficulty, seed=seed)
-obs_dict = env.reset(project=True, seed=seed, obs_as_dict=True, init_pose=INIT_POSE)
+obs_dict = env.reset(project=True, seed=seed, obs_as_dict=True)
 env.spec.timestep_limit = timstep_limit
 
 total_reward = 0
@@ -47,6 +48,7 @@ while True:
     action = locoCtrl.update(obs_dict)
     obs_dict, reward, done, info = env.step(action, project = True, obs_as_dict=True)
     total_reward += reward
+    print(total_reward)
     if done:
         break
 print('    score={} time={}sec'.format(total_reward, t))
